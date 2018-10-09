@@ -1,0 +1,54 @@
+0:00:00.000028297 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;31m            GST_INIT gst.c:507:init_pre:[00m Initializing GStreamer Core Library version 1.12.3
+0:00:00.000054899 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;31m            GST_INIT gst.c:508:init_pre:[00m Using library installed in /usr/lib/x86_64-linux-gnu
+0:00:00.000060038 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;31m            GST_INIT gst.c:528:init_pre:[00m Linux gaian-H270N-WIFI 4.13.0-46-generic #51-Ubuntu SMP Tue Jun 12 12:36:29 UTC 2018 x86_64
+0:00:00.000094315 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;34m          GST_MEMORY gstallocator.c:593:_priv_gst_allocator_initialize:[00m memory alignment: 7
+0:00:00.000135212 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;34m          GST_MEMORY gstallocator.c:569:gst_allocator_sysmem_init:[00m init allocator 0x55f1c9285840
+0:00:00.000146601 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;34m          GST_MEMORY gstallocator.c:211:gst_allocator_register:[00m registering allocator 0x55f1c9285840 with name "SystemMemory"
+0:00:00.000179140 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;31m            GST_INIT gstmessage.c:127:_priv_gst_message_initialize:[00m init messages
+0:00:00.000217564 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;37;41m    GST_ELEMENT_PADS gstelement.c:302:gst_element_base_class_init:[00m type GstElement : factory (nil)
+0:00:00.000228744 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;04m             default gstelement.c:195:gst_element_setup_thread_pool:[00m creating element thread pool
+0:00:00.000247469 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;37;41m    GST_ELEMENT_PADS gstelement.c:302:gst_element_base_class_init:[00m type GstBin : factory (nil)
+0:00:00.000399917 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;31m            GST_INIT gstcontext.c:84:_priv_gst_context_initialize:[00m init contexts
+0:00:00.000532736 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;36m  GST_PLUGIN_LOADING gstplugin.c:317:_priv_gst_plugin_initialize:[00m registering 0 static plugins
+0:00:00.000565330 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:576:gst_registry_add_feature:<registry0>[00m adding feature 0x55f1c92a2040 (bin)
+0:00:00.000570833 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;31;44m     GST_REFCOUNTING gstobject.c:672:gst_object_set_parent:<bin>[00m set parent (ref and sink)
+0:00:00.000580417 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;37;41m    GST_ELEMENT_PADS gstelement.c:302:gst_element_base_class_init:[00m type GstPipeline : factory 0x55f1c92a2120
+0:00:00.000590623 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:576:gst_registry_add_feature:<registry0>[00m adding feature 0x55f1c92a2120 (pipeline)
+0:00:00.000594455 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;31;44m     GST_REFCOUNTING gstobject.c:672:gst_object_set_parent:<pipeline>[00m set parent (ref and sink)
+0:00:00.000597336 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;36m  GST_PLUGIN_LOADING gstplugin.c:225:gst_plugin_register_static:[00m registered static plugin "staticelements"
+0:00:00.000600435 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:462:gst_registry_add_plugin:<registry0>[00m adding plugin 0x55f1c92a1040 for filename "(NULL)"
+0:00:00.000603589 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;36m  GST_PLUGIN_LOADING gstplugin.c:227:gst_plugin_register_static:[00m added static plugin "staticelements", result: 1
+0:00:00.000611860 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00m        GST_REGISTRY gstregistry.c:1721:ensure_current_registry:[00m reading registry cache: /home/gaian/.cache/gstreamer-1.0/registry.x86_64.bin
+0:00:00.000631480 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistrybinary.c:564:priv_gst_registry_binary_read_cache:[00m File data at address 0x7f586f321000
+0:00:00.000637832 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistrybinary.c:473:gst_registry_binary_check_magic:[00m Reading/casting for GstBinaryRegistryMagic at address 0x7f586f321000
+0:00:00.000642037 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00m        GST_REGISTRY gstregistrybinary.c:596:priv_gst_registry_binary_read_cache:[00m No binary plugins structure to read
+0:00:00.000644886 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00m        GST_REGISTRY gstregistrybinary.c:621:priv_gst_registry_binary_read_cache:[00m loaded /home/gaian/.cache/gstreamer-1.0/registry.x86_64.bin in 0.000022 seconds
+0:00:00.000656115 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1749:ensure_current_registry:[00m Updating registry cache
+0:00:00.000658551 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00m        GST_REGISTRY gstregistry.c:1577:scan_and_update_registry:[00m Validating plugins from registry cache: /home/gaian/.cache/gstreamer-1.0/registry.x86_64.bin
+0:00:00.000661204 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1587:scan_and_update_registry:[00m scanning paths added via --gst-plugin-path
+0:00:00.000663497 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1610:scan_and_update_registry:[00m GST_PLUGIN_PATH not set
+0:00:00.000665615 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1622:scan_and_update_registry:[00m GST_PLUGIN_SYSTEM_PATH not set
+0:00:00.000669103 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1629:scan_and_update_registry:[00m scanning home plugins /home/gaian/.local/share/gstreamer-1.0/plugins
+0:00:00.000671933 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1361:gst_registry_scan_path_internal:<registry0>[00m scanning path /home/gaian/.local/share/gstreamer-1.0/plugins
+0:00:00.000701382 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1365:gst_registry_scan_path_internal:<registry0>[00m registry changed in path /home/gaian/.local/share/gstreamer-1.0/plugins: 0
+0:00:00.000705258 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1657:scan_and_update_registry:[00m scanning main plugins /usr/lib/x86_64-linux-gnu/gstreamer-1.0
+0:00:00.000708161 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1361:gst_registry_scan_path_internal:<registry0>[00m scanning path /usr/lib/x86_64-linux-gnu/gstreamer-1.0
+0:00:00.000712902 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1365:gst_registry_scan_path_internal:<registry0>[00m registry changed in path /usr/lib/x86_64-linux-gnu/gstreamer-1.0: 0
+0:00:00.000715992 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00m        GST_REGISTRY gstregistry.c:1524:gst_registry_remove_cache_plugins:<registry0>[00m removing cached plugins
+0:00:00.000718346 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00m        GST_REGISTRY gstregistry.c:1679:scan_and_update_registry:[00m Registry cache has not changed
+0:00:00.000720496 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00m        GST_REGISTRY gstregistry.c:1756:ensure_current_registry:[00m registry reading and updating done, result = 1
+0:00:00.000723134 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;31m            GST_INIT gst.c:727:init_post:[00m GLib runtime version: 2.54.1
+0:00:00.000726369 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;31m            GST_INIT gst.c:729:init_post:[00m GLib headers version: 2.54.0
+0:00:00.000729186 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;31m            GST_INIT gst.c:730:init_post:[00m initialized GStreamer successfully
+0:00:00.000731656 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;04m             default gsttracerutils.c:79:_priv_gst_tracing_init:[00m Initializing GstTracer
+0:00:00.000743625 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;04m             default gstparse.c:263:gst_parse_launchv_full:[00m escaping argument playbin
+0:00:00.000747334 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;04m             default gstparse.c:263:gst_parse_launchv_full:[00m escaping argument uri=file:///home/gaian/bc1.mmt
+0:00:00.000750219 [336m22613[00m 0x55f1c927c600 [36mINFO   [00m [00;01;37;41m        GST_PIPELINE gstparse.c:334:gst_parse_launch_full:[00m parsing pipeline description 'playbin uri=file:///home/gaian/bc1.mmt '
+0:00:00.000755041 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;37;41m        GST_PIPELINE parse.l:123:priv_gst_parse_yylex:[00m flex: IDENTIFIER: playbin
+0:00:00.000759697 [336m22613[00m 0x55f1c927c600 [33;01mWARN   [00m [00;01;37;41m GST_ELEMENT_FACTORY gstelementfactory.c:456:gst_element_factory_make:[00m no such element factory "playbin"!
+0:00:00.000764065 [336m22613[00m 0x55f1c927c600 [31;01mERROR  [00m [00;01;37;41m        GST_PIPELINE grammar.y:816:priv_gst_parse_yyparse:[00m no element "playbin"
+0:00:00.000768252 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;37;41m        GST_PIPELINE parse.l:169:priv_gst_parse_yylex:[00m flex: SPACE: [ ]
+0:00:00.000771349 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;37;41m        GST_PIPELINE parse.l:91:priv_gst_parse_yylex:[00m flex: ASSIGNMENT: uri=file:///home/gaian/bc1.mmt
+0:00:00.000774823 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;37;41m        GST_PIPELINE parse.l:169:priv_gst_parse_yylex:[00m flex: SPACE: [ ]
+0:00:00.000781083 [336m22613[00m 0x55f1c927c600 [37mDEBUG  [00m [00;01;37;41m        GST_PIPELINE grammar.y:1191:priv_gst_parse_launch:[00m got 0 elements and 0 links
+ERROR: pipeline could not be constructed: no element "playbin".
