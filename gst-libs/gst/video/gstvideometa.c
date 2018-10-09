@@ -16,10 +16,20 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstvideometa.h"
 
 #include <string.h>
+
+/**
+ * SECTION:gstvideometa
+ * @title: GstMeta for video
+ * @short_description: Video related GstMeta
+ *
+ */
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -288,8 +298,8 @@ gst_buffer_add_video_meta (GstBuffer * buffer,
  * @width: the width
  * @height: the height
  * @n_planes: number of planes
- * @offset: offset of each plane
- * @stride: stride of each plane
+ * @offset: (array fixed-size=4): offset of each plane
+ * @stride: (array fixed-size=4): stride of each plane
  *
  * Attaches GstVideoMeta metadata to @buffer with the given parameters.
  *
@@ -335,8 +345,8 @@ gst_buffer_add_video_meta_full (GstBuffer * buffer,
  * @meta: a #GstVideoMeta
  * @plane: a plane
  * @info: a #GstMapInfo
- * @data: the data of @plane
- * @stride: the stride of @plane
+ * @data: (out): the data of @plane
+ * @stride: (out): the stride of @plane
  * @flags: @GstMapFlags
  *
  * Map the video plane with index @plane in @meta and return a pointer to the
@@ -695,6 +705,8 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
 
     dmeta->id = smeta->id;
     dmeta->parent_id = smeta->parent_id;
+    dmeta->params = g_list_copy_deep (smeta->params,
+        (GCopyFunc) gst_structure_copy, NULL);
   } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
     GstVideoMetaTransform *trans = data;
     gint ow, oh, nw, nh;
@@ -736,6 +748,7 @@ gst_video_region_of_interest_meta_init (GstMeta * meta, gpointer params,
   emeta->id = 0;
   emeta->parent_id = 0;
   emeta->x = emeta->y = emeta->w = emeta->h = 0;
+  emeta->params = NULL;
 
   return TRUE;
 }
@@ -743,7 +756,9 @@ gst_video_region_of_interest_meta_init (GstMeta * meta, gpointer params,
 static void
 gst_video_region_of_interest_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
-  // nothing to do
+  GstVideoRegionOfInterestMeta *emeta = (GstVideoRegionOfInterestMeta *) meta;
+
+  g_list_free_full (emeta->params, (GDestroyNotify) gst_structure_free);
 }
 
 const GstMetaInfo *
@@ -848,6 +863,65 @@ gst_buffer_add_video_region_of_interest_meta_id (GstBuffer * buffer,
   meta->h = h;
 
   return meta;
+}
+
+/**
+ * gst_video_region_of_interest_meta_add_param:
+ * @meta: a #GstVideoRegionOfInterestMeta
+ * @s: (transfer full): a #GstStructure
+ *
+ * Attach element-specific parameters to @meta meant to be used by downstream
+ * elements which may handle this ROI.
+ * The name of @s is used to identify the element these parameters are meant for.
+ *
+ * This is typically used to tell encoders how they should encode this specific region.
+ * For example, a structure named "roi/x264enc" could be used to give the
+ * QP offsets this encoder should use when encoding the region described in @meta.
+ * Multiple parameters can be defined for the same meta so different encoders
+ * can be supported by cross platform applications).
+ *
+ * Since: 1.14
+ */
+void
+gst_video_region_of_interest_meta_add_param (GstVideoRegionOfInterestMeta *
+    meta, GstStructure * s)
+{
+  g_return_if_fail (meta);
+  g_return_if_fail (s);
+
+  meta->params = g_list_append (meta->params, s);
+}
+
+/**
+ * gst_video_region_of_interest_meta_get_param:
+ * @meta: a #GstVideoRegionOfInterestMeta
+ * @name: a name.
+ *
+ * Retrieve the parameter for @meta having @name as structure name,
+ * or %NULL if there is none.
+ *
+ * Returns: (transfer none) (nullable): a #GstStructure
+ *
+ * Since: 1.14
+ * See also: gst_video_region_of_interest_meta_add_param()
+ */
+GstStructure *
+gst_video_region_of_interest_meta_get_param (GstVideoRegionOfInterestMeta *
+    meta, const gchar * name)
+{
+  GList *l;
+
+  g_return_val_if_fail (meta, NULL);
+  g_return_val_if_fail (name, NULL);
+
+  for (l = meta->params; l; l = g_list_next (l)) {
+    GstStructure *s = l->data;
+
+    if (gst_structure_has_name (s, name))
+      return s;
+  }
+
+  return NULL;
 }
 
 /* Time Code Meta implementation *******************************************/

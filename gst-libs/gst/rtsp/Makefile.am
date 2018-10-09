@@ -2,6 +2,7 @@ libgstrtspincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtsp
 
 libgstrtspinclude_HEADERS = \
 			    rtsp.h \
+			    rtsp-prelude.h \
 			    gstrtsp.h \
 			    gstrtsptransport.h \
 			    gstrtspurl.h \
@@ -33,8 +34,8 @@ nodist_libgstrtspinclude_HEADERS = gstrtsp-enumtypes.h
 #gstrtspextwms.c  
 #rtspextreal.c    
 
-libgstrtsp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
-libgstrtsp_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(GIO_LIBS) $(LIBM)
+libgstrtsp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS) -DBUILDING_GST_RTSP
+libgstrtsp_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS) $(LIBM)
 libgstrtsp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS) $(WIN32_LIBS)
 
 BUILT_SOURCES = $(built_headers) $(built_sources)
@@ -44,7 +45,8 @@ glib_gen_prefix = __gst_rtsp
 glib_enum_define = gst_rtsp
 glib_enum_headers = $(libgstrtspinclude_HEADERS)
 glib_gen_basename = gstrtsp
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_RTSP_API
+glib_gen_decl_include=\#include <gst/rtsp/rtsp-prelude.h>
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 
@@ -70,13 +72,16 @@ GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERS
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=$(builddir)/../sdp \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--library=libgstrtsp-@GST_API_VERSION@.la \
 		--include=Gio-2.0 \
 		--include=Gst-@GST_API_VERSION@ \
+		--include=GstBase-@GST_API_VERSION@ \
 		--include=GstSdp-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gio-2.0 \
 		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg gstreamer-base-@GST_API_VERSION@ \
 		--pkg gstreamer-sdp-@GST_API_VERSION@ \
 		--pkg-export gstreamer-rtsp-@GST_API_VERSION@ \
 		--add-init-section="$(INTROSPECTION_INIT)" \
@@ -100,6 +105,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=$(builddir) \
 		--includedir=$(builddir)/../sdp \
 		--includedir=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--includedir=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)

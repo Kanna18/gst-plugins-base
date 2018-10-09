@@ -73,20 +73,13 @@
 #if GST_GL_HAVE_WINDOW_VIV_FB
 #include <gst/gl/viv-fb/gstgldisplay_viv_fb.h>
 #endif
+#if GST_GL_HAVE_WINDOW_GBM
+#include <gst/gl/gbm/gstgldisplay_gbm.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_context);
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
-
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_INIT (gst_gl_display_debug, "gldisplay", 0, "opengl display"); \
-  GST_DEBUG_CATEGORY_GET (gst_context, "GST_CONTEXT");
-
-G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, GST_TYPE_OBJECT,
-    DEBUG_INIT);
-
-#define GST_GL_DISPLAY_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_DISPLAY, GstGLDisplayPrivate))
 
 enum
 {
@@ -115,6 +108,14 @@ struct _GstGLDisplayPrivate
   GMutex thread_lock;
   GCond thread_cond;
 };
+
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_INIT (gst_gl_display_debug, "gldisplay", 0, "opengl display"); \
+  GST_DEBUG_CATEGORY_GET (gst_context, "GST_CONTEXT");
+
+G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstGLDisplay)
+    DEBUG_INIT);
 
 static gboolean
 _unlock_main_thread (GstGLDisplay * display)
@@ -155,8 +156,6 @@ _event_thread_main (GstGLDisplay * display)
 static void
 gst_gl_display_class_init (GstGLDisplayClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GstGLDisplayPrivate));
-
   /**
    * GstGLDisplay::create-context:
    * @object: the #GstGLDisplay
@@ -183,7 +182,7 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
 static void
 gst_gl_display_init (GstGLDisplay * display)
 {
-  display->priv = GST_GL_DISPLAY_GET_PRIVATE (display);
+  display->priv = gst_gl_display_get_instance_private (display);
 
   display->type = GST_GL_DISPLAY_TYPE_ANY;
   display->priv->gl_api = GST_GL_API_ANY;
@@ -311,6 +310,11 @@ gst_gl_display_new (void)
         disp_idx = v;
     }
     display = GST_GL_DISPLAY (gst_gl_display_viv_fb_new (disp_idx));
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_GBM
+  if (!display && (!user_choice || g_strstr_len (user_choice, 3, "gbm"))) {
+    display = GST_GL_DISPLAY (gst_gl_display_gbm_new ());
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
@@ -457,7 +461,7 @@ gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
 /**
  * gst_context_get_gl_display:
  * @context: a #GstContext
- * @display: (transfer full): resulting #GstGLDisplay
+ * @display: (out) (transfer full): resulting #GstGLDisplay
  *
  * Returns: Whether @display was in @context
  *

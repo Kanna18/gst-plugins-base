@@ -283,6 +283,8 @@ static const FormatInfo formats[] = {
       ""},
   {"application/x-teletext", "Teletext", 0, ""},
   {"application/x-kate", "Kate", 0, ""},
+  {"closedcaption/x-cea-608", N_("CEA 608 Closed Caption"), FLAG_SUB, ""},
+  {"closedcaption/x-cea-708", N_("CEA 708 Closed Caption"), FLAG_SUB, ""},
   {"subtitle/x-kate", N_("Kate subtitle format"), FLAG_SUB, ""},
   {"application/x-subtitle-vtt", N_("WebVTT subtitle format"), FLAG_SUB, ""},
   {"subpicture/x-dvb", "DVB subtitles", FLAG_SUB, ""},
@@ -433,6 +435,8 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
   const GstStructure *s;
 
   g_assert (info != NULL);
+
+  gst_pb_utils_init_locale_text_domain ();
 
   if (info->desc != NULL)
     return g_strdup (_(info->desc));
@@ -819,11 +823,12 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
     gint depth = 0;
     gboolean is_float;
     const gchar *str;
-    GstAudioFormat format;
+    GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
     const GstAudioFormatInfo *finfo;
 
     str = gst_structure_get_string (s, "format");
-    format = gst_audio_format_from_string (str);
+    if (str)
+      format = gst_audio_format_from_string (str);
     if (format == GST_AUDIO_FORMAT_UNKNOWN)
       return g_strdup (_("Uncompressed audio"));
 
@@ -930,6 +935,8 @@ gst_pb_utils_get_source_description (const gchar * protocol)
 
   g_return_val_if_fail (protocol != NULL, NULL);
 
+  gst_pb_utils_init_locale_text_domain ();
+
   if (strcmp (protocol, "cdda") == 0)
     return g_strdup (_("Audio CD source"));
 
@@ -1019,6 +1026,8 @@ gst_pb_utils_get_decoder_description (const GstCaps * caps)
 
   g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
 
+  gst_pb_utils_init_locale_text_domain ();
+
   /* special-case RTP caps */
   if (caps_are_rtp_caps (tmp, "video", &str)) {
     ret = g_strdup_printf (_("%s video RTP depayloader"), str);
@@ -1069,6 +1078,7 @@ gst_pb_utils_get_encoder_description (const GstCaps * caps)
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
   tmp = copy_and_clean_caps (caps);
   g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
+  gst_pb_utils_init_locale_text_domain ();
 
   /* special-case RTP caps */
   if (caps_are_rtp_caps (tmp, "video", &str)) {
@@ -1116,6 +1126,8 @@ gst_pb_utils_get_element_description (const gchar * factory_name)
   gchar *ret;
 
   g_return_val_if_fail (factory_name != NULL, NULL);
+
+  gst_pb_utils_init_locale_text_domain ();
 
   ret = g_strdup_printf (_("GStreamer element %s"), factory_name);
   if (ret && g_str_has_prefix (ret, factory_name))

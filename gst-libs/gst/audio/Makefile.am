@@ -19,7 +19,8 @@ glib_enum_headers= 		\
 glib_enum_define = GST_AUDIO
 glib_gen_prefix = gst_audio
 glib_gen_basename = audio
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_AUDIO_API
+glib_gen_decl_include=\#include <gst/audio/audio-prelude.h>
 
 built_sources = audio-enumtypes.c
 built_headers = audio-enumtypes.h
@@ -34,6 +35,7 @@ EXTRA_DIST += dbesi0.c
 
 libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	audio.c \
+	audio-buffer.c \
 	audio-format.c \
 	audio-channels.c \
 	audio-channel-mixer.c \
@@ -63,7 +65,9 @@ nodist_libgstaudio_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 libgstaudio_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/audio
 libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio.h \
+	audio-prelude.h	\
 	audio-format.h \
+	audio-buffer.h \
 	audio-channels.h \
 	audio-channel-mixer.h \
 	audio-converter.h \
@@ -100,7 +104,7 @@ noinst_HEADERS = \
 	audio-resampler-neon.h
 
 libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
-		$(ORC_CFLAGS)
+		$(ORC_CFLAGS) -DBUILDING_GST_AUDIO
 libgstaudio_@GST_API_VERSION@_la_LIBADD = \
   $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
   $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ORC_LIBS)
@@ -182,7 +186,7 @@ GstAudio-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_API_VE
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstBase-@GST_API_VERSION@ \
 		--include=GstTag-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-base-@GST_API_VERSION@ \
 		--pkg-export gstreamer-audio-@GST_API_VERSION@ \

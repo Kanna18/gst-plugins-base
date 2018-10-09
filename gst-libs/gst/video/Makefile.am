@@ -4,11 +4,13 @@ include $(top_srcdir)/common/orc.mak
 
 glib_enum_headers = video.h video-format.h video-color.h video-info.h video-dither.h \
 			colorbalance.h navigation.h video-chroma.h video-tile.h video-converter.h \
-			video-resampler.h video-frame.h video-scaler.h
+			video-resampler.h video-frame.h video-scaler.h video-anc.h \
+			video-overlay-composition.h
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_VIDEO_API
+glib_gen_decl_include=\#include <gst/video/video-prelude.h>
 
 built_sources = video-enumtypes.c
 built_headers = video-enumtypes.h
@@ -23,6 +25,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	colorbalancechannel.c   \
 	navigation.c            \
 	video.c          	\
+	video-anc.c		\
 	video-event.c          	\
 	video-format.c         	\
 	video-chroma.c         	\
@@ -60,6 +63,8 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	colorbalancechannel.h	\
 	navigation.h            \
 	video.h			\
+	video-prelude.h		\
+	video-anc.h		\
 	video-event.h          	\
 	video-format.h         	\
 	video-chroma.h         	\
@@ -91,7 +96,7 @@ nodist_libgstvideo_@GST_API_VERSION@include_HEADERS = $(built_headers)
 noinst_HEADERS = gstvideoutilsprivate.h
 
 libgstvideo_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
-					$(ORC_CFLAGS)
+					$(ORC_CFLAGS) -DBUILDING_GST_VIDEO
 libgstvideo_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) $(LIBM)
 libgstvideo_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
@@ -122,7 +127,7 @@ GstVideo-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_API_VE
 		--library=libgstvideo-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstBase-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-base-@GST_API_VERSION@ \
 		--pkg-export gstreamer-video-@GST_API_VERSION@ \

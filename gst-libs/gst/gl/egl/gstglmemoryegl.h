@@ -30,13 +30,13 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_GL_MEMORY_EGL_ALLOCATOR (gst_gl_memory_egl_allocator_get_type())
-GST_EXPORT GType gst_gl_memory_egl_allocator_get_type(void);
+GST_GL_API GType gst_gl_memory_egl_allocator_get_type(void);
 
 #define GST_IS_GL_MEMORY_EGL_ALLOCATOR(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GL_MEMORY_EGL_ALLOCATOR))
 #define GST_IS_GL_MEMORY_EGL_ALLOCATOR_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GL_MEMORY_EGL_ALLOCATOR))
 #define GST_GL_MEMORY_EGL_ALLOCATOR_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_GL_MEMORY_EGL_ALLOCATOR, GstGLMemoryEGLAllocatorClass))
 #define GST_GL_MEMORY_EGL_ALLOCATOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GL_MEMORY_EGL_ALLOCATOR, GstGLMemoryEGLAllocator))
-#define GST_GL_MEMORY_EGL_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_MEMORY_EGL_ALLOCATOR, GstGLAllocatorClass))
+#define GST_GL_MEMORY_EGL_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_MEMORY_EGL_ALLOCATOR, GstGLMemoryEGLAllocatorClass))
 #define GST_GL_MEMORY_EGL_ALLOCATOR_CAST(obj)            ((GstGLMemoryEGLAllocator *)(obj))
 
 /**
@@ -61,16 +61,16 @@ struct _GstGLMemoryEGL
  */
 #define GST_GL_MEMORY_EGL_ALLOCATOR_NAME "GLMemoryEGL"
 
-GST_EXPORT
+GST_GL_API
 void          gst_gl_memory_egl_init_once               (void);
 
-GST_EXPORT
+GST_GL_API
 gboolean      gst_is_gl_memory_egl                      (GstMemory * mem);
 
-GST_EXPORT
+GST_GL_API
 gpointer      gst_gl_memory_egl_get_image               (GstGLMemoryEGL * mem);
 
-GST_EXPORT
+GST_GL_API
 gpointer      gst_gl_memory_egl_get_display             (GstGLMemoryEGL * mem);
 
 /**

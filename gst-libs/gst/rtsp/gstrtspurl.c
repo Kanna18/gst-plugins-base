@@ -47,6 +47,9 @@
  *
  * Provides helper functions to handle RTSP urls.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -284,7 +287,7 @@ gst_rtsp_url_set_port (GstRTSPUrl * url, guint16 port)
 /**
  * gst_rtsp_url_get_port:
  * @url: a #GstRTSPUrl
- * @port: location to hold the port
+ * @port: (out): location to hold the port
  *
  * Get the port number of @url.
  *

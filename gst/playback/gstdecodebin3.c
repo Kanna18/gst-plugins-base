@@ -181,6 +181,21 @@ GST_DEBUG_CATEGORY_STATIC (decodebin3_debug);
 
 #define EXTRA_DEBUG 1
 
+#define CUSTOM_FINAL_EOS_QUARK _custom_final_eos_quark_get ()
+#define CUSTOM_FINAL_EOS_QUARK_DATA "custom-final-eos"
+static GQuark
+_custom_final_eos_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark =
+        (gsize) g_quark_from_static_string ("decodebin3-custom-final-eos");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
 typedef struct _GstDecodebin3 GstDecodebin3;
 typedef struct _GstDecodebin3Class GstDecodebin3Class;
 
@@ -1139,6 +1154,70 @@ beach:
   SELECTION_UNLOCK (dbin);
 }
 
+/* sort_streams:
+ * GCompareFunc to use with lists of GstStream.
+ * Sorts GstStreams by stream type and SELECT flag and stream-id
+ * First video, then audio, then others.
+ *
+ * Return: negative if a<b, 0 if a==b, positive if a>b
+ */
+static gint
+sort_streams (GstStream * sa, GstStream * sb)
+{
+  GstStreamType typea, typeb;
+  GstStreamFlags flaga, flagb;
+  const gchar *ida, *idb;
+  gint ret = 0;
+
+  typea = gst_stream_get_stream_type (sa);
+  typeb = gst_stream_get_stream_type (sb);
+
+  GST_LOG ("sa(%s), sb(%s)", gst_stream_get_stream_id (sa),
+      gst_stream_get_stream_id (sb));
+
+  /* Sort by stream type. First video, then audio, then others(text, container, unknown) */
+  if (typea != typeb) {
+    if (typea & GST_STREAM_TYPE_VIDEO)
+      ret = -1;
+    else if (typea & GST_STREAM_TYPE_AUDIO)
+      ret = (!(typeb & GST_STREAM_TYPE_VIDEO)) ? -1 : 1;
+    else if (typea & GST_STREAM_TYPE_TEXT)
+      ret = (!(typeb & GST_STREAM_TYPE_VIDEO)
+          && !(typeb & GST_STREAM_TYPE_AUDIO)) ? -1 : 1;
+    else if (typea & GST_STREAM_TYPE_CONTAINER)
+      ret = (typeb & GST_STREAM_TYPE_UNKNOWN) ? -1 : 1;
+    else
+      ret = 1;
+
+    if (ret != 0) {
+      GST_LOG ("Sort by stream-type: %d", ret);
+      return ret;
+    }
+  }
+
+  /* Sort by SELECT flag, if stream type is same. */
+  flaga = gst_stream_get_stream_flags (sa);
+  flagb = gst_stream_get_stream_flags (sb);
+
+  ret =
+      (flaga & GST_STREAM_FLAG_SELECT) ? ((flagb & GST_STREAM_FLAG_SELECT) ? 0 :
+      -1) : ((flagb & GST_STREAM_FLAG_SELECT) ? 1 : 0);
+
+  if (ret != 0) {
+    GST_LOG ("Sort by SELECT flag: %d", ret);
+    return ret;
+  }
+
+  /* Sort by stream-id, if otherwise the same. */
+  ida = gst_stream_get_stream_id (sa);
+  idb = gst_stream_get_stream_id (sb);
+  ret = g_strcmp0 (ida, idb);
+
+  GST_LOG ("Sort by stream-id: %d", ret);
+
+  return ret;
+}
+
 /* Call with INPUT_LOCK taken */
 static GstStreamCollection *
 get_merged_collection (GstDecodebin3 * dbin)
@@ -1146,6 +1225,7 @@ get_merged_collection (GstDecodebin3 * dbin)
   gboolean needs_merge = FALSE;
   GstStreamCollection *res = NULL;
   GList *tmp;
+  GList *unsorted_streams = NULL;
   guint i, nb_stream;
 
   /* First check if we need to do a merge or just return the only collection */
@@ -1176,7 +1256,7 @@ get_merged_collection (GstDecodebin3 * dbin)
     for (i = 0; i < nb_stream; i++) {
       GstStream *stream =
           gst_stream_collection_get_stream (dbin->main_input->collection, i);
-      gst_stream_collection_add_stream (res, gst_object_ref (stream));
+      unsorted_streams = g_list_append (unsorted_streams, stream);
     }
   }
 
@@ -1190,10 +1270,23 @@ get_merged_collection (GstDecodebin3 * dbin)
       for (i = 0; i < nb_stream; i++) {
         GstStream *stream =
             gst_stream_collection_get_stream (input->collection, i);
-        gst_stream_collection_add_stream (res, gst_object_ref (stream));
+        unsorted_streams = g_list_append (unsorted_streams, stream);
       }
     }
   }
+
+  /* re-order streams : video, then audio, then others */
+  unsorted_streams =
+      g_list_sort (unsorted_streams, (GCompareFunc) sort_streams);
+  for (tmp = unsorted_streams; tmp; tmp = tmp->next) {
+    GstStream *stream = (GstStream *) tmp->data;
+    GST_DEBUG_OBJECT (dbin, "Adding #stream(%s) to collection",
+        gst_stream_get_stream_id (stream));
+    gst_stream_collection_add_stream (res, gst_object_ref (stream));
+  }
+
+  if (unsorted_streams)
+    g_list_free (unsorted_streams);
 
   return res;
 }
@@ -1585,7 +1678,6 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
 
       /* Send EOS to all slots */
       if (peer) {
-        GstStructure *s;
         GstEvent *stream_start, *eos;
 
         stream_start =
@@ -1603,9 +1695,9 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
         }
 
         eos = gst_event_new_eos ();
-        s = gst_event_writable_structure (eos);
-        gst_structure_set (s, "decodebin3-custom-final-eos", G_TYPE_BOOLEAN,
-            TRUE, NULL);
+        gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (eos),
+            CUSTOM_FINAL_EOS_QUARK, (gchar *) CUSTOM_FINAL_EOS_QUARK_DATA,
+            NULL);
         gst_pad_send_event (peer, eos);
         gst_object_unref (peer);
       } else
@@ -1704,12 +1796,15 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
         break;
       case GST_EVENT_EOS:
       {
-        const GstStructure *s = gst_event_get_structure (ev);
         gboolean was_drained = slot->is_drained;
         slot->is_drained = TRUE;
 
         /* Custom EOS handling first */
-        if (s && gst_structure_has_field (s, "decodebin3-custom-eos")) {
+        if (gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (ev),
+                CUSTOM_EOS_QUARK)) {
+          /* remove custom-eos */
+          gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (ev),
+              CUSTOM_EOS_QUARK, NULL, NULL);
           GST_LOG_OBJECT (pad, "Received custom EOS");
           ret = GST_PAD_PROBE_HANDLED;
           SELECTION_LOCK (dbin);
@@ -1762,8 +1857,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
 
           free_multiqueue_slot_async (dbin, slot);
           ret = GST_PAD_PROBE_REMOVE;
-        } else if (s
-            && gst_structure_has_field (s, "decodebin3-custom-final-eos")) {
+        } else if (gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (ev),
+                CUSTOM_FINAL_EOS_QUARK)) {
           GST_DEBUG_OBJECT (pad, "Got final eos, propagating downstream");
         } else {
           GST_DEBUG_OBJECT (pad, "Got regular eos (all_inputs_are_eos)");

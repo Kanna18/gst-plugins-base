@@ -117,6 +117,33 @@ AC_ARG_ENABLE([dispmanx],
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-dispmanx]) ;;
      esac],[NEED_DISPMANX=auto])
 
+AC_ARG_ENABLE([gbm],
+     [  --enable-gbm        Enable Mesa3D GBM support (requires EGL) @<:@default=auto@:>@],
+     [case "${enableval}" in
+       yes)  NEED_GBM=yes ;;
+       no)   NEED_GBM=no ;;
+       auto) NEED_GBM=auto ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-gbm]) ;;
+     esac],[NEED_GBM=auto])
+
+AC_ARG_ENABLE([png],
+     [  --enable-png        Enable libpng support @<:@default=auto@:>@],
+     [case "${enableval}" in
+       yes)  NEED_PNG=yes ;;
+       no)   NEED_PNG=no ;;
+       auto) NEED_PNG=auto ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-png]) ;;
+     esac],[NEED_PNG=auto])
+
+AC_ARG_ENABLE([jpeg],
+     [  --enable-jpeg        Enable libjpeg support @<:@default=auto@:>@],
+     [case "${enableval}" in
+       yes)  NEED_JPEG=yes ;;
+       no)   NEED_JPEG=no ;;
+       auto) NEED_JPEG=auto ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-jpeg]) ;;
+     esac],[NEED_JPEG=auto])
+
 AG_GST_PKG_CHECK_MODULES(X11_XCB, x11-xcb)
 save_CPPFLAGS="$CPPFLAGS"
 save_LIBS="$LIBS"
@@ -126,6 +153,7 @@ HAVE_GLES2=no
 HAVE_GLES3_H=no
 HAVE_WAYLAND_EGL=no
 HAVE_VIV_FB_EGL=no
+HAVE_GBM_EGL=no
 HAVE_EGL_RPI=no
 
 case $host in
@@ -169,6 +197,34 @@ case $host in
     dnl imx6 / Vivante specifics
     if test "x$HAVE_EGL" = "xyes"; then
         AC_CHECK_LIB([EGL], [fbGetDisplay], [HAVE_VIV_FB_EGL=yes])
+    fi
+
+    if test "x$NEED_GBM" != "xno"; then
+      if test "x$HAVE_EGL" = "xyes"; then
+        PKG_CHECK_MODULES(DRM, libdrm >= 2.4.55, HAVE_DRM=yes, HAVE_DRM=no)
+        AC_SUBST(DRM_CFLAGS)
+        AC_SUBST(DRM_LIBS)
+        if test "x$NEED_GBM" = "xyes"; then
+          if test "x$HAVE_DRM" = "xno"; then
+            AC_MSG_ERROR([GBM support requested but libdrm is not available])
+          fi
+          if test "x$HAVE_GUDEV" = "xno"; then
+            AC_MSG_ERROR([GBM support requested but gudev is not available])
+          fi
+        fi
+        if test "x$HAVE_DRM" = "xyes" -a "x$HAVE_GUDEV" = "xyes"; then
+          PKG_CHECK_MODULES(GBM, gbm, HAVE_GBM_EGL=yes, HAVE_GBM_EGL=no)
+          if test "x$HAVE_GBM_EGL" = "xno" -a "x$NEED_GBM" = "xyes"; then
+            AC_MSG_ERROR([GBM support requested but gbm library is not available])
+          fi
+          AC_SUBST(GBM_CFLAGS)
+          AC_SUBST(GBM_LIBS)
+        fi
+      elif test "x$NEED_GBM" = "xyes"; then
+        AC_MSG_ERROR([GBM support requested but EGL is not available])
+      else
+        AC_MSG_NOTICE([GBM support requested but EGL is not available; not enabling GBM support])
+      fi
     fi
 
     dnl FIXME: Mali EGL depends on GLESv1 or GLESv2
@@ -467,6 +523,15 @@ case $host in
       fi
     fi
 
+    if test "x$HAVE_GBM_EGL" = "xyes"; then
+      if test "x$NEED_EGL" = "xno" -o "x$HAVE_EGL" = "xno"; then
+        AC_MSG_WARN([EGL is required by the Mesa GBM EGL backend])
+      else
+        HAVE_WINDOW_GBM=yes
+        GL_CFLAGS="$GL_CFLAGS $DRM_CFLAGS $GBM_CFLAGS"
+      fi
+    fi
+
     if test "x$HAVE_X11_XCB" = "xyes" -a "x$HAVE_EGL_RPI" = "xno"; then
       if test "x$NEED_X11" != "xno"; then
         GL_LIBS="$GL_LIBS $X11_XCB_LIBS"
@@ -511,7 +576,7 @@ case $host in
       fi
     else
       if test "x$NEED_EGL" != "xno"; then
-        if test "x$HAVE_WINDOW_WAYLAND" = "xyes" -o "x$HAVE_WINDOW_X11" = "xyes" -o "x$HAVE_WINDOW_DISPMANX" = "xyes" -o "x$HAVE_WINDOW_VIV_FB" = "xyes"; then
+        if test "x$HAVE_WINDOW_WAYLAND" = "xyes" -o "x$HAVE_WINDOW_X11" = "xyes" -o "x$HAVE_WINDOW_DISPMANX" = "xyes" -o "x$HAVE_WINDOW_VIV_FB" = "xyes" -o "x$HAVE_WINDOW_GBM" = "xyes"; then
           GL_LIBS="$GL_LIBS -lEGL $EGL_LIBS"
           GL_CFLAGS="$GL_CFLAGS $EGL_CFLAGS"
           USE_EGL=yes
@@ -669,6 +734,7 @@ GST_GL_HAVE_WINDOW_ANDROID=0
 GST_GL_HAVE_WINDOW_DISPMANX=0
 GST_GL_HAVE_WINDOW_EAGL=0
 GST_GL_HAVE_WINDOW_VIV_FB=0
+GST_GL_HAVE_WINDOW_GBM=0
 
 if test "x$HAVE_WINDOW_X11" = "xyes"; then
   GL_WINDOWS="x11 $GL_WINDOWS"
@@ -702,6 +768,10 @@ if test "x$HAVE_WINDOW_VIV_FB" = "xyes"; then
   GL_WINDOWS="viv-fb $GL_WINDOWS"
   GST_GL_HAVE_WINDOW_VIV_FB=1
 fi
+if test "x$HAVE_WINDOW_GBM" = "xyes"; then
+  GL_WINDOWS="gbm $GL_WINDOWS"
+  GST_GL_HAVE_WINDOW_GBM=1
+fi
 
 GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_WINDOW_X11 $GST_GL_HAVE_WINDOW_X11
@@ -712,6 +782,7 @@ GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_WINDOW_DISPMANX $GST_GL_HAVE_WINDOW_DISPMANX
 #define GST_GL_HAVE_WINDOW_EAGL $GST_GL_HAVE_WINDOW_EAGL
 #define GST_GL_HAVE_WINDOW_VIV_FB $GST_GL_HAVE_WINDOW_VIV_FB
+#define GST_GL_HAVE_WINDOW_GBM $GST_GL_HAVE_WINDOW_GBM
 "
 
 dnl PLATFORM's
@@ -789,6 +860,7 @@ if test "x$GL_APIS" = "x" -o "x$GL_PLATFORMS" = "x" -o "x$GL_WINDOWS" = "x"; the
   HAVE_WINDOW_COCOA=no
   HAVE_WINDOW_EAGL=no
   HAVE_WINDOW_VIV_FB=no
+  HAVE_WINDOW_GBM=no
 fi
 
 AC_SUBST(GL_APIS)
@@ -808,6 +880,7 @@ AM_CONDITIONAL(HAVE_WINDOW_WAYLAND, test "x$HAVE_WINDOW_WAYLAND" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_ANDROID, test "x$HAVE_WINDOW_ANDROID" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_EAGL, test "x$HAVE_WINDOW_EAGL" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_VIV_FB, test "x$HAVE_WINDOW_VIV_FB" = "xyes")
+AM_CONDITIONAL(HAVE_WINDOW_GBM, test "x$HAVE_WINDOW_GBM" = "xyes")
 
 AM_CONDITIONAL(USE_OPENGL, test "x$USE_OPENGL" = "xyes")
 AM_CONDITIONAL(USE_GLES2, test "x$USE_GLES2" = "xyes")
@@ -868,6 +941,7 @@ GST_GL_HAVE_GLSYNC=0
 GST_GL_HAVE_GLUINT64=0
 GST_GL_HAVE_GLINT64=0
 GST_GL_HAVE_EGLATTRIB=0
+GST_GL_HAVE_EGLUINT64KHR=0
 
 old_CFLAGS=$CFLAGS
 CFLAGS="$GL_CFLAGS $CFLAGS"
@@ -916,6 +990,11 @@ if test "x$USE_EGL" = "xyes"; then
   if test "x$ac_cv_type_EGLAttrib" = "xyes"; then
     GST_GL_HAVE_EGLATTRIB=1
   fi
+
+  AC_CHECK_TYPES(EGLuint64KHR, [], [], [[$EGL_INCLUDES]])
+  if test "x$ac_cv_type_EGLuint64KHR" = "xyes"; then
+    GST_GL_HAVE_EGLUINT64KHR=1
+  fi
 fi
 
 CFLAGS=$old_CFLAGS
@@ -929,6 +1008,7 @@ GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_GLUINT64 $GST_GL_HAVE_GLUINT64
 #define GST_GL_HAVE_GLINT64 $GST_GL_HAVE_GLINT64
 #define GST_GL_HAVE_EGLATTRIB $GST_GL_HAVE_EGLATTRIB
+#define GST_GL_HAVE_EGLUINT64KHR $GST_GL_HAVE_EGLUINT64KHR
 "
 
 AC_CONFIG_COMMANDS([gst-libs/gst/gl/gstglconfig.h], [
@@ -991,13 +1071,16 @@ AC_SUBST(GRAPHENE_LIBS)
 AC_SUBST(GRAPHENE_CFLAGS)
 
 dnl Needed by plugins that use g_module_*() API
-dnl FIXME: probably not needed because AG_GST_CHECK_GLIB already includes it?
 PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
 
 dnl libpng is optional
-PKG_CHECK_MODULES(LIBPNG, libpng >= 1.0, HAVE_PNG=yes, HAVE_PNG=no)
-if test "x$HAVE_PNG" = "xyes"; then
-  AC_DEFINE(HAVE_PNG, [1] , [Use libpng])
+if test "x$NEED_PNG" != "xno"; then
+  PKG_CHECK_MODULES(LIBPNG, libpng >= 1.0, HAVE_PNG=yes, HAVE_PNG=no)
+  if test "x$HAVE_PNG" = "xyes"; then
+    AC_DEFINE(HAVE_PNG, [1] , [Use libpng])
+  elif test "x$NEED_PNG" = "xyes"; then
+    AC_MSG_ERROR([libpng support requested but libpng is not available])
+  fi
 fi
 AC_SUBST(HAVE_PNG)
 AC_SUBST(LIBPNG_LIBS)
@@ -1005,25 +1088,29 @@ AC_SUBST(LIBPNG_CFLAGS)
 
 dnl libjpeg is optional
 AC_ARG_WITH(jpeg-mmx, [  --with-jpeg-mmx, path to MMX'ified JPEG library])
-OLD_LIBS="$LIBS"
-if test x$with_jpeg_mmx != x; then
-  LIBS="$LIBS -L$with_jpeg_mmx"
-fi
-AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-JPEG_LIBS="$LIBS -ljpeg-mmx"
-LIBS="$OLD_LIBS"
-if test x$HAVE_JPEG != xyes; then
-  JPEG_LIBS="-ljpeg"
-  AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-fi
+if test "x$NEED_JPEG" != "xno"; then
+  OLD_LIBS="$LIBS"
+  if test x$with_jpeg_mmx != x; then
+    LIBS="$LIBS -L$with_jpeg_mmx"
+  fi
+  AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+  JPEG_LIBS="$LIBS -ljpeg-mmx"
+  LIBS="$OLD_LIBS"
+  if test x$HAVE_JPEG != xyes; then
+    JPEG_LIBS="-ljpeg"
+    AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+  fi
 
-if test x$HAVE_JPEG = xyes; then
-  AC_DEFINE(HAVE_JPEG, [1], [Use libjpeg])
-else
-  JPEG_LIBS=
+  if test x$HAVE_JPEG = xyes; then
+    AC_DEFINE(HAVE_JPEG, [1], [Use libjpeg])
+  elif test "x$NEED_JPEG" = "xyes"; then
+    AC_MSG_ERROR([libjpeg support requested but libjpeg is not available])
+  else
+    JPEG_LIBS=
+  fi
+  AC_SUBST(JPEG_LIBS)
+  AC_SUBST(HAVE_JPEG)
 fi
-AC_SUBST(JPEG_LIBS)
-AC_SUBST(HAVE_JPEG)
 ])
 
 dnl --------------------------------------------------------------------------
@@ -1033,45 +1120,12 @@ dnl --------------------------------------------------------------------------
 AC_DEFUN([AG_GST_GL_EXAMPLES_CHECKS],
 [
 
-dnl clutter is optional and used in examples
-HAVE_CLUTTER=no
-HAVE_CLUTTER_X11=no
-HAVE_CLUTTER_GLX=no
-if test "x$BUILD_EXAMPLES" = "xyes"; then
-  PKG_CHECK_MODULES(CLUTTER, clutter-1.0 >= 1.8, HAVE_CLUTTER=yes, HAVE_CLUTTER=no)
-  AC_SUBST(CLUTTER_LIBS)
-  AC_SUBST(CLUTTER_CFLAGS)
-  AC_SUBST(HAVE_CLUTTER)
-
-  PKG_CHECK_MODULES(CLUTTER_GLX, clutter-glx-1.0 >= 1.8, HAVE_CLUTTER_GLX=yes, HAVE_CLUTTER_GLX=no)
-  AC_SUBST(CLUTTER_GLX_LIBS)
-  AC_SUBST(CLUTTER_GLX_CFLAGS)
-  AC_SUBST(HAVE_CLUTTER_GLX)
-
-  PKG_CHECK_MODULES(CLUTTER_X11, clutter-x11-1.0 >= 1.8, HAVE_CLUTTER_X11=yes, HAVE_CLUTTER_X11=no)
-  AC_SUBST(CLUTTER_X11_LIBS)
-  AC_SUBST(CLUTTER_X11_CFLAGS)
-  AC_SUBST(HAVE_CLUTTER_X11)
-fi
-AM_CONDITIONAL(HAVE_CLUTTER, test "x$HAVE_CLUTTER" = "xyes")
-AM_CONDITIONAL(HAVE_CLUTTER_GLX, test "x$HAVE_CLUTTER_GLX" = "xyes")
-AM_CONDITIONAL(HAVE_CLUTTER_X11, test "x$HAVE_CLUTTER_X11" = "xyes")
-
-dnl used in the gl/clutteractor example
-if test "x$BUILD_EXAMPLES" = "xyes"; then
-  PKG_CHECK_MODULES(XCOMPOSITE, xcomposite, HAVE_XCOMPOSITE=yes, HAVE_XCOMPOSITE=no)
-  AC_SUBST(XCOMPOSITE_CFLAGS)
-  AC_SUBST(XCOMPOSITE_LIBS)
-fi
-AM_CONDITIONAL(HAVE_XCOMPOSITE, test "x$HAVE_XCOMPOSITE" = "xyes")
-
 dnl sdl is optional and used in examples
 HAVE_SDL=NO
 if test "x$BUILD_EXAMPLES" = "xyes"; then
   PKG_CHECK_MODULES(SDL, sdl >= 1.2.0, HAVE_SDL=yes, HAVE_SDL=no)
   AC_SUBST(SDL_LIBS)
   AC_SUBST(SDL_CFLAGS)
-  AC_SUBST(SDL_CLUTTER)
 fi
 AM_CONDITIONAL(HAVE_SDL, test "x$HAVE_SDL" = "xyes")
 

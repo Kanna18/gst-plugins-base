@@ -37,14 +37,8 @@
 
 #include <gst/video/gstvideoaffinetransformationmeta.h>
 
-#include "gstglcontext.h"
-#include "gstglframebuffer.h"
-#include "gstglmemory.h"
-#include "gstglshader.h"
-#include "gstglshaderstrings.h"
-#include "gstglsl.h"
+#include "gl.h"
 #include "gstglsl_private.h"
-#include "gstglslstage.h"
 #include "gstglutils_private.h"
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
@@ -102,14 +96,11 @@ struct _GstGLViewConvertPrivate
   GLuint attr_texture;
 };
 
-#define GST_GL_VIEW_CONVERT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
-    GST_TYPE_GL_VIEW_CONVERT, GstGLViewConvertPrivate))
-
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_view_convert_debug, "glviewconvert", 0, "glviewconvert object");
 
 G_DEFINE_TYPE_WITH_CODE (GstGLViewConvert, gst_gl_view_convert,
-    GST_TYPE_OBJECT, DEBUG_INIT);
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLViewConvert) DEBUG_INIT);
 
 static void gst_gl_view_convert_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -119,28 +110,6 @@ static void gst_gl_view_convert_finalize (GObject * object);
 
 static void _do_view_convert (GstGLContext * context,
     GstGLViewConvert * viewconvert);
-
-GType
-gst_gl_stereo_downmix_mode_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
-      {GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS,
-          "Dubois optimised Green-Magenta anaglyph", "green-magenta-dubois"},
-      {GST_GL_STEREO_DOWNMIX_ANAGLYPH_RED_CYAN_DUBOIS,
-            "Dubois optimised Red-Cyan anaglyph",
-          "red-cyan-dubois"},
-      {GST_GL_STEREO_DOWNMIX_ANAGLYPH_AMBER_BLUE_DUBOIS,
-          "Dubois optimised Amber-Blue anaglyph", "amber-blue-dubois"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id =
-        g_enum_register_static ("GstGLStereoDownmix", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
 
 /* *INDENT-OFF* */
 /* These match the order and number of DOWNMIX_ANAGLYPH_* modes */
@@ -261,8 +230,6 @@ gst_gl_view_convert_class_init (GstGLViewConvertClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstGLViewConvertPrivate));
-
   gobject_class->set_property = gst_gl_view_convert_set_property;
   gobject_class->get_property = gst_gl_view_convert_get_property;
   gobject_class->finalize = gst_gl_view_convert_finalize;
@@ -295,14 +262,14 @@ gst_gl_view_convert_class_init (GstGLViewConvertClass * klass)
   g_object_class_install_property (gobject_class, PROP_OUTPUT_DOWNMIX_MODE,
       g_param_spec_enum ("downmix-mode", "Mode for mono downmixed output",
           "Output anaglyph type to generate when downmixing to mono",
-          GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE, DEFAULT_DOWNMIX,
+          GST_TYPE_GL_STEREO_DOWNMIX, DEFAULT_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_gl_view_convert_init (GstGLViewConvert * convert)
 {
-  convert->priv = GST_GL_VIEW_CONVERT_GET_PRIVATE (convert);
+  convert->priv = gst_gl_view_convert_get_instance_private (convert);
 
   convert->shader = NULL;
   convert->downmix_mode = DEFAULT_DOWNMIX;
@@ -1083,7 +1050,7 @@ _intersect_with_mview_modes (GstCaps * caps, const GValue * modes)
  * @caps: (transfer none): the #GstCaps to transform
  * @filter: (transfer none): a set of filter #GstCaps
  *
- * Provides an implementation of #GstBaseTransformClass::transform_caps()
+ * Provides an implementation of #GstBaseTransformClass.transform_caps()
  *
  * Returns: (transfer full): the converted #GstCaps
  *
@@ -1273,7 +1240,7 @@ _fixate_texture_target (GstGLViewConvert * viewconvert,
  * @caps: (transfer none): the #GstCaps of @direction
  * @othercaps: (transfer full): the #GstCaps to fixate
  *
- * Provides an implementation of #GstBaseTransformClass::fixate_caps()
+ * Provides an implementation of #GstBaseTransformClass.fixate_caps()
  *
  * Returns: (transfer full): the fixated #GstCaps
  *
@@ -1954,6 +1921,9 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (from_gl_target, priv->in_tex[0]->tex_id);
 
+  gl->ClearColor (0.0, 0.0, 0.0, 1.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT);
+
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
 
   if (gl->BindVertexArray)
@@ -2017,6 +1987,7 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
   gint in_views, out_views;
   GstVideoMultiviewMode in_mode;
   GstVideoMultiviewMode out_mode;
+  GstGLSyncMeta *sync_meta;
 
   out_width = GST_VIDEO_INFO_WIDTH (&viewconvert->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&viewconvert->out_info);
@@ -2149,6 +2120,18 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
   }
   priv->n_out_tex = out_views;
 
+  if (priv->primary_in) {
+    if ((sync_meta = gst_buffer_get_gl_sync_meta (priv->primary_in))) {
+      gst_gl_sync_meta_wait (sync_meta, context);
+    }
+  }
+
+  if (priv->auxilliary_in) {
+    if ((sync_meta = gst_buffer_get_gl_sync_meta (priv->auxilliary_in))) {
+      gst_gl_sync_meta_wait (sync_meta, context);
+    }
+  }
+
   GST_LOG_OBJECT (viewconvert, "multiview splitting to textures:%p,%p,%p,%p "
       "dimensions:%ux%u, from textures:%p,%p,%p,%p dimensions:%ux%u",
       priv->out_tex[0], priv->out_tex[1],
@@ -2198,6 +2181,17 @@ out:
   if (!res) {
     gst_buffer_replace (&priv->primary_out, NULL);
     gst_buffer_replace (&priv->auxilliary_out, NULL);
+  }
+
+  if (priv->primary_out) {
+    if ((sync_meta = gst_buffer_add_gl_sync_meta (context, priv->primary_out)))
+      gst_gl_sync_meta_set_sync_point (sync_meta, context);
+  }
+
+  if (priv->auxilliary_out) {
+    if ((sync_meta =
+            gst_buffer_add_gl_sync_meta (context, priv->auxilliary_out)))
+      gst_gl_sync_meta_set_sync_point (sync_meta, context);
   }
 
   priv->result = res;
@@ -2354,18 +2348,38 @@ gst_gl_view_convert_get_output (GstGLViewConvert * viewconvert,
 
   outbuf = priv->primary_out;
   if (outbuf) {
+    GstVideoOverlayCompositionMeta *composition_meta;
+
     gst_buffer_copy_into (outbuf, priv->primary_in,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
     GST_BUFFER_FLAG_SET (outbuf,
         GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE |
         GST_VIDEO_BUFFER_FLAG_MULTIPLE_VIEW);
+
+    composition_meta =
+        gst_buffer_get_video_overlay_composition_meta (priv->primary_in);
+    if (composition_meta) {
+      GST_DEBUG ("found video overlay composition meta, applying on output.");
+      gst_buffer_add_video_overlay_composition_meta
+          (outbuf, composition_meta->overlay);
+    }
   }
 
   if (priv->auxilliary_out) {
+    GstVideoOverlayCompositionMeta *composition_meta;
+
     gst_buffer_copy_into (priv->auxilliary_out,
         priv->primary_out, GST_BUFFER_COPY_FLAGS, 0, -1);
     GST_BUFFER_FLAG_UNSET (priv->auxilliary_out,
         GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE);
+
+    composition_meta =
+        gst_buffer_get_video_overlay_composition_meta (priv->primary_out);
+    if (composition_meta) {
+      GST_DEBUG ("found video overlay composition meta, applying on output.");
+      gst_buffer_add_video_overlay_composition_meta
+          (priv->auxilliary_out, composition_meta->overlay);
+    }
   }
   priv->primary_out = NULL;
 
@@ -2379,3 +2393,15 @@ done:
   *outbuf_ptr = outbuf;
   return ret;
 }
+
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+GST_GL_API GType gst_gl_stereo_downmix_mode_get_type (void);
+#endif
+
+GType
+gst_gl_stereo_downmix_mode_get_type (void)
+{
+  return gst_gl_stereo_downmix_get_type ();
+}
+#endif

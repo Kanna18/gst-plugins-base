@@ -16,6 +16,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdio.h>
 #include "gstvideotimecode.h"
@@ -79,7 +82,8 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
   if (tc->frames >= fr && (tc->config.fps_n != 0 || tc->config.fps_d != 1))
     return FALSE;
   if (tc->config.fps_d == 1001) {
-    if (tc->config.fps_n != 30000 && tc->config.fps_n != 60000)
+    if (tc->config.fps_n != 30000 && tc->config.fps_n != 60000 &&
+        tc->config.fps_n != 24000)
       return FALSE;
   } else if (tc->config.fps_n % tc->config.fps_d != 0) {
     return FALSE;
@@ -689,7 +693,7 @@ gst_video_time_code_new_from_string (const gchar * tc_str)
  * The resulting config->latest_daily_jam is set to
  * midnight, and timecode is set to the given time.
  *
- * Returns: the #GVideoTimeCode representation of @dt.
+ * Returns: the #GstVideoTimeCode representation of @dt.
  *
  * Since: 1.12
  */

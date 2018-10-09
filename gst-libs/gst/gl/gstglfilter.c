@@ -611,7 +611,7 @@ gst_gl_filter_caps_remove_size (GstCaps * caps)
 }
 
 static GstCaps *
-gst_gl_filter_set_caps_features (const GstCaps * caps,
+gst_gl_filter_ensure_caps_contains_features (const GstCaps * caps,
     const gchar * feature_name)
 {
   GstCaps *ret = gst_caps_copy (caps);
@@ -619,8 +619,12 @@ gst_gl_filter_set_caps_features (const GstCaps * caps,
   guint i = 0;
 
   for (i = 0; i < n; i++) {
-    gst_caps_set_features (ret, i,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+    GstCapsFeatures *f = gst_caps_get_features (ret, i);
+    if (!gst_caps_features_is_any (f)) {
+      if (!gst_caps_features_contains (f, feature_name)) {
+        gst_caps_features_add (f, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+      }
+    }
   }
 
   return ret;
@@ -651,7 +655,7 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
         direction, caps, NULL);
 
     result =
-        gst_gl_filter_set_caps_features (tmp,
+        gst_gl_filter_ensure_caps_contains_features (tmp,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
     gst_caps_unref (tmp);
     tmp = result;
@@ -731,6 +735,7 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 {
   GstGLFilter *filter;
   GstGLFilterClass *filter_class;
+  GstGLTextureTarget from_target, to_target;
 
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
@@ -740,12 +745,38 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   if (!gst_video_info_from_caps (&filter->out_info, outcaps))
     goto wrong_caps;
 
+  {
+    GstStructure *in_s = gst_caps_get_structure (incaps, 0);
+    GstStructure *out_s = gst_caps_get_structure (outcaps, 0);
+
+    if (gst_structure_has_field_typed (in_s, "texture-target", G_TYPE_STRING))
+      from_target =
+          gst_gl_texture_target_from_string (gst_structure_get_string (in_s,
+              "texture-target"));
+    else
+      from_target = GST_GL_TEXTURE_TARGET_2D;
+
+    if (gst_structure_has_field_typed (out_s, "texture-target", G_TYPE_STRING))
+      to_target =
+          gst_gl_texture_target_from_string (gst_structure_get_string (out_s,
+              "texture-target"));
+    else
+      to_target = GST_GL_TEXTURE_TARGET_2D;
+
+    if (to_target == GST_GL_TEXTURE_TARGET_NONE
+        || from_target == GST_GL_TEXTURE_TARGET_NONE)
+      /* invalid caps */
+      goto wrong_caps;
+  }
+
   if (filter_class->set_caps) {
     if (!filter_class->set_caps (filter, incaps, outcaps))
       goto error;
   }
 
   gst_caps_replace (&filter->out_caps, outcaps);
+  filter->in_texture_target = from_target;
+  filter->out_texture_target = to_target;
 
   GST_DEBUG_OBJECT (filter, "set_caps %dx%d in %" GST_PTR_FORMAT
       " out %" GST_PTR_FORMAT,
@@ -758,7 +789,7 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 /* ERRORS */
 wrong_caps:
   {
-    GST_WARNING ("Wrong caps");
+    GST_WARNING ("Wrong caps - could not understand input or output caps");
     return FALSE;
   }
 error:
@@ -1076,6 +1107,7 @@ _draw_with_shader_cb (GstGLFilter * filter, GstGLMemory * in_tex,
 {
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
+  guint gl_target;
 
 #if GST_GL_HAVE_OPENGL
   if (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) {
@@ -1086,9 +1118,10 @@ _draw_with_shader_cb (GstGLFilter * filter, GstGLMemory * in_tex,
 
   _get_attributes (filter);
   gst_gl_shader_use (filter->default_shader);
+  gl_target = gst_gl_texture_target_to_gl (filter->in_texture_target);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->BindTexture (GL_TEXTURE_2D, gst_gl_memory_get_texture_id (in_tex));
+  gl->BindTexture (gl_target, gst_gl_memory_get_texture_id (in_tex));
 
   gst_gl_shader_set_uniform_1i (filter->default_shader, "tex", 1);
   gst_gl_shader_set_uniform_1f (filter->default_shader, "width",

@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/prerelease
-AC_INIT([GStreamer Base Plug-ins],[1.13.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-base])
+AC_INIT([GStreamer Base Plug-ins],[1.15.0.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-base])
 
 AG_GST_INIT
 
@@ -56,10 +56,10 @@ dnl      1.2.5 => 205
 dnl      1.10.9 (who knows) => 1009
 dnl
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 1301, 0, 1301)
+AS_LIBTOOL(GST, 1500, 0, 1500)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=1.13.1
+GST_REQ=1.15.0.1
 
 dnl *** autotools stuff ****
 
@@ -280,6 +280,13 @@ AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 ORC_CHECK([0.4.24])
 
+dnl For Requires.private in pkg-config files
+ORC_PC=
+if test x"$HAVE_ORC" = "xyes"; then
+    ORC_PC="orc-0.4"
+fi
+AC_SUBST(ORC_PC)
+
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
 AG_GST_CHECK_GST($GST_API_VERSION, [$GST_REQ], yes)
@@ -294,6 +301,12 @@ GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
+
+dnl check for gudev
+PKG_CHECK_MODULES(G_UDEV, gudev-1.0 , [
+        AC_DEFINE([HAVE_GUDEV], 1, [Define if gudev is installed])
+        HAVE_GUDEV="yes" ],
+        [HAVE_GUDEV="no"])
 
 AG_GST_GL_CHECKS
 
@@ -472,6 +485,9 @@ esac
 
 dnl Check for mmap (needed by allocators library)
 AC_CHECK_FUNC([mmap], [AC_DEFINE(HAVE_MMAP, 1, [Defined if mmap is supported])])
+
+dnl Check for DMABuf synchronization ioctl (needed for DMABuf CPU access)
+AC_CHECK_HEADERS([linux/dma-buf.h], [])
 
 dnl *** plug-ins to include ***
 
@@ -825,7 +841,13 @@ fi
 AC_SUBST(DEPRECATED_CFLAGS)
 
 VISIBILITY_CFLAGS=""
-AS_COMPILER_FLAG([-fvisibility=hidden], [VISIBILITY_CFLAGS="-fvisibility=hidden"])
+AS_COMPILER_FLAG([-fvisibility=hidden], [
+  VISIBILITY_CFLAGS="-fvisibility=hidden"
+  AC_DEFINE(GST_API_EXPORT, [extern __attribute__ ((visibility ("default")))], [public symbol export define])
+], [
+  VISIBILITY_CFLAGS=""
+  AC_DEFINE(GST_API_EXPORT, [extern], [public symbol export define])
+])
 AC_SUBST(VISIBILITY_CFLAGS)
 
 VISIBILITY_CXXFLAGS=""
@@ -942,6 +964,7 @@ gst-libs/gst/gl/wayland/Makefile
 gst-libs/gst/gl/win32/Makefile
 gst-libs/gst/gl/x11/Makefile
 gst-libs/gst/gl/viv-fb/Makefile
+gst-libs/gst/gl/gbm/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
 gst-libs/gst/rtsp/Makefile
@@ -1003,7 +1026,6 @@ tests/examples/gl/gtk/filternovideooverlay/Makefile
 tests/examples/gl/gtk/filtervideooverlay/Makefile
 tests/examples/gl/cocoa/Makefile
 tests/examples/gl/sdl/Makefile
-tests/examples/gl/clutter/Makefile
 tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile

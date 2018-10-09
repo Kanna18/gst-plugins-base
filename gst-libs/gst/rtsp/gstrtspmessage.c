@@ -50,6 +50,9 @@
  *
  * Provides methods for creating and parsing request, response and data messages.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 
@@ -229,8 +232,8 @@ gst_rtsp_message_init_request (GstRTSPMessage * msg, GstRTSPMethod method,
  * gst_rtsp_message_parse_request:
  * @msg: a #GstRTSPMessage
  * @method: (out) (allow-none): location to hold the method
- * @uri: (out) (allow-none): location to hold the uri
- * @version: (out) (allow-none): location to hold the version
+ * @uri: (out) (allow-none) (transfer none): location to hold the uri
+ * @version: (out) (allow-none) (transfer none): location to hold the version
  *
  * Parse the request message @msg and store the values @method, @uri and
  * @version. The result locations can be %NULL if one is not interested in its
@@ -363,8 +366,8 @@ gst_rtsp_message_init_response (GstRTSPMessage * msg, GstRTSPStatusCode code,
  * gst_rtsp_message_parse_response:
  * @msg: a #GstRTSPMessage
  * @code: (out) (allow-none): location to hold the status code
- * @reason: (out) (allow-none): location to hold the status reason
- * @version: (out) (allow-none): location to hold the version
+ * @reason: (out) (allow-none) (transfer none): location to hold the status reason
+ * @version: (out) (allow-none) (transfer none): location to hold the version
  *
  * Parse the response message @msg and store the values @code, @reason and
  * @version. The result locations can be %NULL if one is not interested in its
@@ -1277,7 +1280,8 @@ parse_auth_credentials (GPtrArray * auth_credentials, const gchar * header,
  *
  * Parses the credentials given in a WWW-Authenticate or Authorization header.
  *
- * Returns: %NULL-terminated array of GstRTSPAuthCredential or %NULL.
+ * Returns: (array zero-terminated=1):
+ *     %NULL-terminated array of GstRTSPAuthCredential or %NULL.
  *
  * Since: 1.12
  */

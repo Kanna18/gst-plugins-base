@@ -5,6 +5,8 @@ plugin_LTLIBRARIES = libgstopengl.la
 #	gstglbasemixer.h
 #	gstglmixer.c
 #	gstglmixer.h
+#	gstglmixerbin.h
+#	gstglmixerbin.c
 #	gstglstereomix.c
 #	gstglstereomix.h
 #	gstglvideomixer.c
@@ -12,11 +14,11 @@ plugin_LTLIBRARIES = libgstopengl.la
 
 libgstopengl_la_SOURCES = \
 	gstopengl.c \
+	gstglalpha.c \
 	gstgluploadelement.c \
 	gstgldownloadelement.c \
 	gstglcolorconvertelement.c \
 	gstglfilterbin.c \
-	gstglmixerbin.c \
 	gstglsinkbin.c \
 	gstglsrcbin.c \
 	gstglimagesink.c \
@@ -50,14 +52,15 @@ libgstopengl_la_SOURCES = \
 	gstgldeinterlace.c \
 	gltestsrc.c \
 	gstgltestsrc.c \
+	gstgloverlaycompositorelement.c \
 	gstglutils.c
 
 noinst_HEADERS = \
+	gstglalpha.h \
 	gstgluploadelement.h \
 	gstgldownloadelement.h \
 	gstglcolorconvertelement.h \
 	gstglfilterbin.h \
-	gstglmixerbin.h \
 	gstglsinkbin.h \
 	gstglsrcbin.h \
 	gstglimagesink.h \
@@ -73,6 +76,7 @@ noinst_HEADERS = \
 	gstglviewconvert.h \
 	gltestsrc.h \
 	gstgltestsrc.h \
+	gstgloverlaycompositorelement.h \
 	gstglutils.h
 
 # full opengl required
@@ -147,6 +151,7 @@ libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/allocators/libgstallocators-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_LIBS) \

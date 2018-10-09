@@ -4,7 +4,8 @@ libgsttagincludedir = \
 glib_enum_define = GST_TAG
 glib_gen_prefix = gst_tag
 glib_gen_basename = tag
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_TAG_API
+glib_gen_decl_include=\#include <gst/tag/tag-prelude.h>
 
 glib_enum_headers = tag.h gsttagdemux.h
 
@@ -15,7 +16,7 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 include $(top_srcdir)/common/gst-glib-gen.mak
 
 libgsttaginclude_HEADERS = \
-	tag.h gsttagdemux.h gsttagmux.h xmpwriter.h
+	tag.h tag-prelude.h gsttagdemux.h gsttagmux.h xmpwriter.h
 nodist_libgsttaginclude_HEADERS = tag-enumtypes.h
 
 CLEANFILES = $(BUILT_SOURCES)
@@ -29,7 +30,7 @@ libgsttag_@GST_API_VERSION@_la_SOURCES = \
 nodist_libgsttag_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
 libgsttag_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ZLIB_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ZLIB_CFLAGS) -DBUILDING_GST_TAG \
 	-DLICENSE_TRANSLATIONS_PATH=\"$(pkgdatadir)/@GST_API_VERSION@/license-translations.dict\"
 libgsttag_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ZLIB_LIBS)
 libgsttag_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
@@ -65,7 +66,7 @@ GstTag-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgsttag-@GST_API_VERSIO
 		--library=libgsttag-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstBase-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-base-@GST_API_VERSION@ \
 		--pkg-export gstreamer-tag-@GST_API_VERSION@ \

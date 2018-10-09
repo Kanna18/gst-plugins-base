@@ -6,6 +6,7 @@ riff_sources = [
 
 riff_headers = [
   'riff.h',
+  'riff-prelude.h',
   'riff-ids.h',
   'riff-media.h',
   'riff-read.h',
@@ -15,10 +16,11 @@ install_headers(riff_headers, subdir : 'gstreamer-1.0/gst/riff/')
 riff_deps = [audio_dep, tag_dep]
 gstriff = library('gstriff-@0@'.format(api_version),
   riff_sources,
-  c_args : gst_plugins_base_args,
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_RIFF'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,
+  darwin_versions : osxversion,
   install : true,
   dependencies : riff_deps,
 )

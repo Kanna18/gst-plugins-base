@@ -62,6 +62,9 @@
 #if GST_GL_HAVE_WINDOW_VIV_FB
 #include "viv-fb/gstglwindow_viv_fb_egl.h"
 #endif
+#if GST_GL_HAVE_WINDOW_GBM
+#include "gbm/gstglwindow_gbm_egl.h"
+#endif
 #if GST_GL_HAVE_WINDOW_DISPMANX
 #include "dispmanx/gstglwindow_dispmanx_egl.h"
 #endif
@@ -74,12 +77,6 @@
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
-
-#define gst_gl_window_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstGLWindow, gst_gl_window, GST_TYPE_OBJECT);
-
-#define GST_GL_WINDOW_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW, GstGLWindowPrivate))
 
 static void gst_gl_window_default_draw (GstGLWindow * window);
 static void gst_gl_window_default_run (GstGLWindow * window);
@@ -101,6 +98,10 @@ struct _GstGLWindowPrivate
   GMutex sync_message_lock;
   GCond sync_message_cond;
 };
+
+#define gst_gl_window_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstGLWindow, gst_gl_window,
+    GST_TYPE_OBJECT);
 
 static void gst_gl_window_finalize (GObject * object);
 
@@ -160,7 +161,7 @@ _init_debug (void)
 static void
 gst_gl_window_init (GstGLWindow * window)
 {
-  GstGLWindowPrivate *priv = GST_GL_WINDOW_GET_PRIVATE (window);
+  GstGLWindowPrivate *priv = gst_gl_window_get_instance_private (window);
   window->priv = priv;
 
   g_mutex_init (&window->lock);
@@ -178,8 +179,6 @@ gst_gl_window_init (GstGLWindow * window)
 static void
 gst_gl_window_class_init (GstGLWindowClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GstGLWindowPrivate));
-
   klass->open = GST_DEBUG_FUNCPTR (gst_gl_window_default_open);
   klass->close = GST_DEBUG_FUNCPTR (gst_gl_window_default_close);
   klass->run = GST_DEBUG_FUNCPTR (gst_gl_window_default_run);
@@ -278,6 +277,10 @@ gst_gl_window_new (GstGLDisplay * display)
 #if GST_GL_HAVE_WINDOW_VIV_FB
   if (!window && (!user_choice || g_strstr_len (user_choice, 6, "viv-fb")))
     window = GST_GL_WINDOW (gst_gl_window_viv_fb_egl_new (display));
+#endif
+#if GST_GL_HAVE_WINDOW_GBM
+  if (!window && (!user_choice || g_strstr_len (user_choice, 3, "gbm")))
+    window = GST_GL_WINDOW (gst_gl_window_gbm_egl_new (display));
 #endif
 
   if (!window) {

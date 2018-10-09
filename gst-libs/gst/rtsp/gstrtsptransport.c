@@ -48,6 +48,9 @@
  *
  * Provides helper functions to deal with RTSP transport strings.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -198,6 +201,7 @@ gst_rtsp_transport_init (GstRTSPTransport * transport)
   return GST_RTSP_OK;
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_rtsp_transport_get_mime:
  * @trans: a #GstRTSPTransMode
@@ -227,6 +231,7 @@ gst_rtsp_transport_get_mime (GstRTSPTransMode trans, const gchar ** mime)
 
   return GST_RTSP_OK;
 }
+#endif
 
 /**
  * gst_rtsp_transport_get_media_type:
@@ -274,7 +279,7 @@ get_default_lower_trans (GstRTSPTransport * transport)
 /**
  * gst_rtsp_transport_get_manager:
  * @trans: a #GstRTSPTransMode
- * @manager: location to hold the result
+ * @manager: (out) (nullable) (transfer none): location to hold the result
  * @option: option index.
  *
  * Get the #GstElement that can handle the buffers transported over @trans.

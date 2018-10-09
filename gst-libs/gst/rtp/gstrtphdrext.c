@@ -24,6 +24,9 @@
  * @see_also: #GstRTPBasePayload, #GstRTPBaseDepayload, gstrtpbuffer
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstrtphdrext.h"
 
@@ -54,9 +57,9 @@ gst_rtp_hdrext_set_ntp_64 (gpointer data, guint size, guint64 ntptime)
 
 /**
  * gst_rtp_hdrext_get_ntp_64:
- * @data: the data to read from
+ * @data: (array length=size) (element-type guint8): the data to read from
  * @size: the size of @data
- * @ntptime: the result NTP time
+ * @ntptime: (out): the result NTP time
  *
  * Reads the NTP time from the @size NTP-64 extension bytes in @data and store the
  * result in @ntptime.
@@ -104,9 +107,9 @@ gst_rtp_hdrext_set_ntp_56 (gpointer data, guint size, guint64 ntptime)
 
 /**
  * gst_rtp_hdrext_get_ntp_56:
- * @data: the data to read from
+ * @data: (array length=size) (element-type guint8): the data to read from
  * @size: the size of @data
- * @ntptime: the result NTP time
+ * @ntptime: (out): the result NTP time
  *
  * Reads the NTP time from the @size NTP-56 extension bytes in @data and store the
  * result in @ntptime.

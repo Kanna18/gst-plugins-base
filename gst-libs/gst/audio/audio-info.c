@@ -121,7 +121,7 @@ gst_audio_info_init (GstAudioInfo * info)
  * @format: the format
  * @rate: the samplerate
  * @channels: the number of channels
- * @position: the channel positions
+ * @position: (array fixed-size=64) (nullable): the channel positions
  *
  * Set the default info for the audio info of @format and @rate and @channels.
  *
@@ -399,7 +399,7 @@ invalid_channel_positions:
  * @src_fmt: #GstFormat of the @src_val
  * @src_val: value to convert
  * @dest_fmt: #GstFormat of the @dest_val
- * @dest_val: pointer to destination value
+ * @dest_val: (out): pointer to destination value
  *
  * Converts among various #GstFormat types.  This function handles
  * GST_FORMAT_BYTES, GST_FORMAT_TIME, and GST_FORMAT_DEFAULT.  For

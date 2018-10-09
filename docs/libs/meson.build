@@ -2,7 +2,7 @@
 # but then what about the other files (sections, sgml)
 types = configure_file(input : 'gst-plugins-base-libs.types',
   output : 'gst-plugins-base-libs.types',
-  configuration : configuration_data())
+  copy : true)
 
 ignored_headers = ['pbutils-private.h', 'gsttageditingprivate.h', 'id3v2.h',
   'kiss_fft_f32.h', 'kiss_fft_f64.h', 'kiss_fftr_f32.h', 'kiss_fftr_f64.h',
@@ -21,7 +21,7 @@ gnome.gtkdoc('gst-plugins-base-libs',
   main_sgml : 'gst-plugins-base-libs-docs.sgml',
   src_dir : '@0@/../../gst-libs/gst'.format(meson.current_source_dir()),
   scan_args : ['--deprecated-guards=GST_DISABLE_DEPRECATED',
-               '--ignore-decorators=GST_EXPORT'],
+               '--ignore-decorators=GST_API|GST_BASE_API|GST_CHECK_API|GST_CONTROLLER_API|GST_NET_API|GST_ALLOCATORS_API|GST_APP_API|GST_AUDIO_API|GST_FFT_API|GST_GL_API|GST_PBUTILS_API|GST_RIFF_API|GST_RTP_API|GST_RTSP_API|GST_SDP_API|GST_TAG_API|GST_VIDEO_API'],
   ignore_headers : ignored_headers,
   scanobjs_args : ['--type-init-func=gst_init(NULL,NULL)'],
   gobject_typesfile : types,

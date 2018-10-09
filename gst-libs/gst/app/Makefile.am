@@ -3,7 +3,8 @@ lib_LTLIBRARIES = libgstapp-@GST_API_VERSION@.la
 glib_enum_define = GST_APP
 glib_gen_prefix = __gst_app
 glib_gen_basename = app
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_APP_API
+glib_gen_decl_include=\#include <gst/app/app-prelude.h>
 
 glib_enum_headers = gstappsrc.h
 
@@ -16,13 +17,14 @@ include $(top_srcdir)/common/gst-glib-gen.mak
 libgstapp_@GST_API_VERSION@_la_SOURCES = gstappsrc.c gstappsink.c
 nodist_libgstapp_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 libgstapp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) -DBUILDING_GST_APP
 libgstapp_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS)
 libgstapp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstapp_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/app
 libgstapp_@GST_API_VERSION@include_HEADERS = \
 	app.h \
+	app-prelude.h \
 	gstappsrc.h \
 	gstappsink.h
 nodist_libgstapp_@GST_API_VERSION@include_HEADERS = app-enumtypes.h
@@ -54,7 +56,7 @@ GstApp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_API_VERSIO
 		--library=libgstapp-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstBase-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-base-@GST_API_VERSION@ \
 		--pkg-export gstreamer-app-@GST_API_VERSION@ \

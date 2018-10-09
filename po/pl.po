@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2018-02-15 17:01+0000\n"
+"POT-Creation-Date: 2017-05-04 15:02+0300\n"
 "PO-Revision-Date: 2016-11-01 20:50+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -82,15 +82,6 @@ msgstr "Nie udało się ustawić położenia na CD."
 msgid "Could not read CD."
 msgstr "Nie udał się odczyt CD."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Brak elementu '%s' - proszę sprawdzić instalację GStreamera."
@@ -104,9 +95,11 @@ msgstr "To wygląda na plik tekstowy"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
 
-#, fuzzy
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
+msgid "Could not create \"decodebin3\" element."
+msgstr "Nie udało się utworzyć elementu \"decodebin3\"."
+
+msgid "Could not create \"urisourcebin\" element."
+msgstr "Nie udało się utworzyć elementu \"urisourcebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -674,12 +667,6 @@ msgstr "Plik listy odtwarzania zawierający wejściowe pliki multimedialne"
 msgid "Do not print any output (apart from errors)"
 msgstr "Bez wypisywania żadnego wyjścia (poza błędami)"
 
-msgid "Use playbin3 pipeline"
-msgstr ""
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr ""
-
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Składnia: %s PLIK1|URI1 [PLIK2|URI2] [PLIK3|URI3] ..."
@@ -689,9 +676,3 @@ msgstr "Trzeba podać przynajmniej jedną nazwę pliku lub URI do odtworzenia."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Klawisz 'k' wyświetla listę skrótów klawiatury.\n"
-
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Nie udało się utworzyć elementu \"decodebin3\"."
-
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Nie udało się utworzyć elementu \"urisourcebin\"."

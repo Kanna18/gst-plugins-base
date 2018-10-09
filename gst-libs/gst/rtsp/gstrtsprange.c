@@ -47,6 +47,9 @@
  *
  * Provides helper functions to deal with time ranges.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <math.h>
 #include <stdio.h>
@@ -254,7 +257,7 @@ done:
 /**
  * gst_rtsp_range_parse:
  * @rangestr: a range string to parse
- * @range: location to hold the #GstRTSPTimeRange result
+ * @range: (out): location to hold the #GstRTSPTimeRange result
  *
  * Parse @rangestr to a #GstRTSPTimeRange.
  *
@@ -562,8 +565,8 @@ get_time (GstRTSPRangeUnit unit, const GstRTSPTime * t1,
 /**
  * gst_rtsp_range_get_times:
  * @range: a #GstRTSPTimeRange
- * @min: result minimum #GstClockTime
- * @max: result maximum #GstClockTime
+ * @min: (out): result minimum #GstClockTime
+ * @max: (out): result maximum #GstClockTime
  *
  * Retrieve the minimum and maximum values from @range converted to
  * #GstClockTime in @min and @max.

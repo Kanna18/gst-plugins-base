@@ -1,4 +1,4 @@
-have_registry = true # FIXME not get_option('disable_registry')
+have_registry = true # FIXME get_option('registry')
 
 # name, condition when to skip the test and extra dependencies
 base_tests = [
@@ -25,6 +25,7 @@ base_tests = [
   [ 'libs/tag.c' ],
   [ 'libs/video.c' ],
   [ 'libs/videoencoder.c' ],
+  [ 'libs/videodecoder.c' ],
   [ 'libs/videotimecode.c' ],
   [ 'libs/xmpwriter.c' ],
   [ 'elements/adder.c' ],
@@ -74,6 +75,8 @@ if build_gstgl
   base_tests += [
     [ 'libs/gstglcolorconvert.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglcontext.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglfeature.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglformat.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglheaders.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglmatrix.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglmemory.c', not build_gstgl, [gstgl_dep]],
