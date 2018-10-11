@@ -165,13 +165,19 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
     goto out;
   }
 
-  GST_INFO_OBJECT (context, "updating layer, frame %fx%f",
-      window_handle.frame.size.width, window_handle.frame.size.height);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        GST_INFO_OBJECT (context, "updating layer, frame %fx%f",
+                         window_handle.frame.size.width, window_handle.frame.size.height);
+    });
+  
 
   if (priv->eagl_layer)
     gst_gl_context_eagl_release_layer (context);
 
-  eagl_layer = (CAEAGLLayer *)[window_handle layer];
+    dispatch_async(dispatch_get_main_queue(), ^{
+       eagl_layer = (CAEAGLLayer *)[window_handle layer];
+    });
+    
   [EAGLContext setCurrentContext:GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl)];
 
   /* Allocate framebuffer */
